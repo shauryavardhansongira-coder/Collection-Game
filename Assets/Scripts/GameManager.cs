@@ -1,10 +1,13 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
+using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour
 {
+    static int highscore;
     [SerializeField] private int score;
+    private int lives = 3;
 
     [SerializeField] private Player player;
 
@@ -12,11 +15,22 @@ public class GameManager : MonoBehaviour
 
     private GameObject[] collectibles;
     private GameObject[] counters;
+    private GameObject[] bombs;
+    private GameObject[] allSpawnables;
 
     private void Start()
     {
         collectibles = GameObject.FindGameObjectsWithTag("Collectible");
+        bombs = GameObject.FindGameObjectsWithTag("Bomb");
+
+        List<GameObject> spawnablesList = new List<GameObject>();
+        spawnablesList.AddRange(collectibles);
+        spawnablesList.AddRange(bombs);
+        allSpawnables = spawnablesList.ToArray();
+
         counters = GameObject.FindGameObjectsWithTag("Counter");
+
+        scoreText.text = "Highscore: " + highscore + "\nScore: " + score + "\nLives: " + lives;
     }
 
     private void Update()
@@ -32,6 +46,8 @@ public class GameManager : MonoBehaviour
     {
         float collectDistance = .8f;
 
+        Vector2 playerPos2D = new Vector2(player.transform.position.x, player.transform.position.z);
+
         foreach (GameObject collectible in collectibles)
         {
             if (!collectible.activeSelf)
@@ -40,7 +56,6 @@ public class GameManager : MonoBehaviour
             }
 
             Vector2 collectiblePos2D = new Vector2(collectible.transform.position.x, collectible.transform.position.z);
-            Vector2 playerPos2D = new Vector2(player.transform.position.x, player.transform.position.z);
 
             if (Vector2.Distance(collectiblePos2D, playerPos2D) < collectDistance)
             {
@@ -49,41 +64,63 @@ public class GameManager : MonoBehaviour
                 score++;
                 player.IncreaseSpeed(0.5f);
 
-                scoreText.text = "Collected: " + score + "/10";
-                if (score == 10)
-                {
-                    scoreText.text = "Collected: " + score + "/10\nR to Reload";
-                }
+                scoreText.text = "Highscore: " + highscore + "\nScore: " + score + "\nLives: " + lives;
+
                 collectible.transform.position = GetRespawnPosition(collectible);
                 collectible.SetActive(true);
             }
         }
+
+        foreach (GameObject bomb in bombs)
+        {
+            if (!bomb.activeSelf)
+            {
+                continue;
+            }
+
+            Vector2 bombPos2D = new Vector2(bomb.transform.position.x, bomb.transform.position.z);
+
+            if (Vector2.Distance(bombPos2D, playerPos2D) < collectDistance)
+            {
+                bomb.SetActive(false);
+
+                lives--;
+                player.IncreaseSpeed(-2f);
+
+                scoreText.text = "Highscore: " + highscore + "\nScore: " + score + "\nLives: " + lives;
+
+                bomb.transform.position = GetRespawnPosition(bomb);
+                bomb.SetActive(true);
+                if (lives == 0)
+                    die();
+            }
+        }
     }
 
-    private Vector3 GetRespawnPosition(GameObject currentCollectible)
+    private Vector3 GetRespawnPosition(GameObject currentSpawnable)
     {
-        Vector2 currentCollectiblePos2D = new Vector2(currentCollectible.transform.position.x, currentCollectible.transform.position.z);
+        Vector2 currentSpawnablePos2D = new Vector2(currentSpawnable.transform.position.x, currentSpawnable.transform.position.z);
         Vector2 playerPos2D = new Vector2(player.transform.position.x, player.transform.position.z);
 
-        Vector2 newPosition = currentCollectiblePos2D;
+        Vector2 newPosition = currentSpawnablePos2D;
 
         for (int i = 0; i < 50; i++)
         {
             bool eligible = true;
 
             newPosition = new Vector2(Random.Range(-7f, 7f), Random.Range(-5f, 5.5f));
-            if (Vector2.Distance(newPosition, currentCollectiblePos2D) > 2)
+            if (Vector2.Distance(newPosition, currentSpawnablePos2D) > 2)
             {
                 if (Vector2.Distance(newPosition, playerPos2D) > 2)
                 {
-                    foreach (GameObject collectible in collectibles)
+                    foreach (GameObject spawnable in allSpawnables)
                     {
-                        if (!collectible.activeSelf)
+                        if (!spawnable.activeSelf)
                             continue;
 
-                        Vector2 collectiblePos2D = new Vector2(collectible.transform.position.x, collectible.transform.position.z);
+                        Vector2 spawnablePos2D = new Vector2(spawnable.transform.position.x, spawnable.transform.position.z);
 
-                        if (Vector2.Distance(newPosition, collectiblePos2D) < 1)
+                        if (Vector2.Distance(newPosition, spawnablePos2D) < 1)
                         {
                             eligible = false;
                             break;
@@ -111,5 +148,14 @@ public class GameManager : MonoBehaviour
             }
         }
         return new Vector3(newPosition.x, 1f, newPosition.y);
+    }
+
+    private void die()
+    {
+        if (score > highscore)
+        {
+            highscore = score;
+        }
+        SceneManager.LoadScene(0);
     }
 }
