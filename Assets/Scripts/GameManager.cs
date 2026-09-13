@@ -46,7 +46,7 @@ public class GameManager : MonoBehaviour
         HandleCollecting();
         if (Input.GetKeyDown(KeyCode.R))
         {
-            SceneManager.LoadScene(0);
+            SceneManager.LoadScene(1);
         }
     }
 
@@ -170,6 +170,7 @@ public class GameManager : MonoBehaviour
         {
             highscore = score;
         }
+        highScoreText.text = "Highscore: " + highscore;
         highScorePanel.text = "HIGHSCORE: " + highscore;
         scorePanel.text = "SCORE: " + score;
         gameOverPanel.SetActive(true);
