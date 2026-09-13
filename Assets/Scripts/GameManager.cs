@@ -2,17 +2,23 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
 using System.Collections.Generic;
+using UnityEngine.UIElements;
 
 public class GameManager : MonoBehaviour
 {
+    [SerializeField] private GameObject gameOverPanel;
     static int highscore;
     [SerializeField] private int score;
     private int lives = 3;
 
     [SerializeField] private Player player;
-
+    [SerializeField] private TextMeshProUGUI highScoreText;
     [SerializeField] private TextMeshProUGUI scoreText;
-
+    [SerializeField] private TextMeshProUGUI scorePanel;
+    [SerializeField] private TextMeshProUGUI highScorePanel;
+    [SerializeField] private GameObject eHeart1;
+    [SerializeField] private GameObject eHeart2;
+    [SerializeField] private GameObject eHeart3;
     private GameObject[] collectibles;
     private GameObject[] counters;
     private GameObject[] bombs;
@@ -20,6 +26,7 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        Time.timeScale = 1f;
         collectibles = GameObject.FindGameObjectsWithTag("Collectible");
         bombs = GameObject.FindGameObjectsWithTag("Bomb");
 
@@ -30,7 +37,8 @@ public class GameManager : MonoBehaviour
 
         counters = GameObject.FindGameObjectsWithTag("Counter");
 
-        scoreText.text = "Highscore: " + highscore + "\nScore: " + score + "\nLives: " + lives;
+        highScoreText.text = "Highscore: " + highscore;
+        scoreText.text = "Score: " + score;
     }
 
     private void Update()
@@ -64,7 +72,7 @@ public class GameManager : MonoBehaviour
                 score++;
                 player.IncreaseSpeed(0.5f);
 
-                scoreText.text = "Highscore: " + highscore + "\nScore: " + score + "\nLives: " + lives;
+                scoreText.text = "Score: " + score;
 
                 collectible.transform.position = GetRespawnPosition(collectible);
                 collectible.SetActive(true);
@@ -85,9 +93,15 @@ public class GameManager : MonoBehaviour
                 bomb.SetActive(false);
 
                 lives--;
+                if (lives == 2)
+                    eHeart3.SetActive(true);
+                if (lives == 1)
+                    eHeart2.SetActive(true);
+                if (lives == 0)
+                    eHeart1.SetActive(true);
                 player.IncreaseSpeed(-2f);
 
-                scoreText.text = "Highscore: " + highscore + "\nScore: " + score + "\nLives: " + lives;
+                scoreText.text = "Score: " + score;
 
                 bomb.transform.position = GetRespawnPosition(bomb);
                 bomb.SetActive(true);
@@ -156,6 +170,9 @@ public class GameManager : MonoBehaviour
         {
             highscore = score;
         }
-        SceneManager.LoadScene(0);
+        highScorePanel.text = "HIGHSCORE: " + highscore;
+        scorePanel.text = "SCORE: " + score;
+        gameOverPanel.SetActive(true);
+        Time.timeScale = 0f;
     }
 }
